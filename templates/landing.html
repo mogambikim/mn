@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>County One LNA</title>
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body>
+    <main class="landing-shell">
+      <header class="landing-header">
+        <div>
+          <p class="eyebrow">County One LNA</p>
+          <h1>County Barcode Workspace</h1>
+        </div>
+        <div class="landing-actions">
+          <a class="header-action secondary-link" href="/counties">Edit counties</a>
+          <a class="header-action secondary-link" href="/instructions">Edit instructions</a>
+          <a class="header-action secondary-link" href="/templates">Edit templates</a>
+          <a class="header-action" href="/studio">Open studio</a>
+        </div>
+      </header>
+
+      <section class="county-grid" aria-label="County selection">
+        {% for county in counties %}
+          <a class="county-row" href="/studio?county={{ county.name | urlencode }}">
+            <span class="county-name">{{ county.name }}</span>
+            {% if county.badge %}
+              <span class="county-badge">{{ county.badge }}</span>
+            {% endif %}
+            {% if county.status == "ready" %}
+              <span class="county-status">OK</span>
+            {% else %}
+              <span class="county-caret">v</span>
+            {% endif %}
+          </a>
+        {% endfor %}
+      </section>
+    </main>
+  </body>
+</html>

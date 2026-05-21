@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PDF417 Barcode Studio</title>
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body>
+    <main class="shell" data-county="{{ county_name or '' }}" data-template="{{ county.template or '' }}">
+      <header class="studio-header">
+        <div>
+          <p class="eyebrow">County One LNA</p>
+          <h1>{{ county_name or "Standard Barcode Studio" }}</h1>
+        </div>
+        <a class="header-action secondary-link" href="/">Back to counties</a>
+      </header>
+      <div id="login-warning" class="login-warning" hidden>Warning! You cannot create a barcode without <a href="#">logging in</a>.</div>
+      <section class="workspace">
+        <form id="barcode-form" class="panel">
+          <div class="field" data-field="license_number">
+            <label for="license_number">DL Number <button type="button" class="hint" data-info="Random letter + 7 random digits. You can click the calculator icon to calculate the number automatically." title="Instruction">i</button> <button type="button" class="calc" data-random="license_number" title="Generate">#</button></label>
+            <input id="license_number" name="license_number" maxlength="20" placeholder="D1234567">
+          </div>
+          <div class="field" data-field="first_name">
+            <label for="first_name">First name <button type="button" class="calc" data-random="first_name" title="Generate">#</button></label>
+            <input id="first_name" name="first_name" placeholder="John">
+          </div>
+          <div class="field" data-field="last_name">
+            <label for="last_name">Last name <button type="button" class="calc" data-random="last_name" title="Generate">#</button></label>
+            <input id="last_name" name="last_name" placeholder="Doe">
+          </div>
+          <div class="field" data-field="middle_name">
+            <label for="middle_name">Middle name <button type="button" class="hint" data-info="Middle name is optional. You can leave it blank, or click the calculator to generate a random middle name." title="Instruction">i</button> <button type="button" class="calc" data-random="middle_name" title="Generate">#</button></label>
+            <input id="middle_name" name="middle_name">
+          </div>
+
+          <div class="field wide" data-field="address">
+            <label for="address">Address <button type="button" class="calc" data-random="address" title="Generate">#</button></label>
+            <input id="address" name="address" placeholder="516 Anson Ct">
+          </div>
+          <div class="field" data-field="city">
+            <label for="city">City <button type="button" class="calc" data-random="city" title="Generate">#</button></label>
+            <input id="city" name="city" placeholder="Denver">
+          </div>
+          <div class="field" data-field="zip_code">
+            <label for="zip_code">Zip code <button type="button" class="calc" data-random="zip_code" title="Generate">#</button></label>
+            <input id="zip_code" name="zip_code" placeholder="800120000">
+          </div>
+          <div class="field" data-field="state">
+            <label for="state">State</label>
+            <input id="state" name="state" value="CO" maxlength="2">
+          </div>
+          <div class="field small" data-field="license_class">
+            <label for="license_class">DL Class</label>
+            <input id="license_class" name="license_class" value="C">
+          </div>
+          <div class="field small" data-field="sex">
+            <label for="sex">Sex</label>
+            <select id="sex" name="sex">
+              <option value="M">M</option>
+              <option value="F">F</option>
+            </select>
+          </div>
+          <div class="field small" data-field="donor">
+            <label for="donor">Donor</label>
+            <select id="donor" name="donor">
+              <option value="NO">No</option>
+              <option value="YES">Yes</option>
+            </select>
+          </div>
+
+          <div class="field" data-field="birth_date">
+            <label for="birth_date">Birth date <button type="button" class="hint" data-info="Enter the date in month, day, year format: MMDDYYYY. Example: 01151970." title="Instruction">i</button> <button type="button" class="calc" data-random="birth_date" title="Generate">#</button></label>
+            <input id="birth_date" name="birth_date" placeholder="01151970">
+            <input class="date-picker" type="date" data-date-target="birth_date" aria-label="Birth date picker">
+          </div>
+          <div class="field" data-field="issue_date">
+            <label for="issue_date">Issue date <button type="button" class="hint" data-info="Public issue period is from October 20, 2025 until today. Click the calculator to generate a valid issue date in MMDDYYYY format." title="Instruction">i</button> <button type="button" class="calc" data-random="issue_date" title="Generate">#</button></label>
+            <input id="issue_date" name="issue_date" placeholder="11262025">
+            <input class="date-picker" type="date" data-date-target="issue_date" min="2025-10-20" aria-label="Issue date picker">
+          </div>
+          <div class="field" data-field="expiry_date">
+            <label for="expiry_date">Expiry date <button type="button" class="hint" data-info="Enter expiry date in month, day, year format: MMDDYYYY. The calculator uses the birth date and adds five years." title="Instruction">i</button> <button type="button" class="calc" data-random="expiry_date" title="Generate">#</button></label>
+            <input id="expiry_date" name="expiry_date" placeholder="01152030">
+            <input class="date-picker" type="date" data-date-target="expiry_date" aria-label="Expiry date picker">
+          </div>
+          <div class="field" data-field="document_discriminator">
+            <label for="document_discriminator">DD <button type="button" class="hint" data-info="First 8 digits are the issue date in DD/MM/YYYY format. The last 2 digits are the expiry year. You can click the calculator icon to calculate DD automatically." title="Instruction">i</button> <button type="button" class="calc" data-random="document_discriminator" title="Generate">#</button></label>
+            <input id="document_discriminator" name="document_discriminator" placeholder="08/25/202165508/AAFD/26">
+          </div>
+          <div class="field" data-field="audit_info">
+            <label for="audit_info">ICN <button type="button" class="hint" data-info="First 2 digits are issue year. Next 3 digits are the day number in that year. Next numbers are document number plus 0401. Click the calculator icon to calculate ICN automatically." title="Instruction">i</button> <button type="button" class="calc" data-random="audit_info" title="Generate">#</button></label>
+            <input id="audit_info" name="audit_info" placeholder="CODL_0_082418_04105">
+          </div>
+
+          <div class="field" data-field="restrictions">
+            <label for="restrictions">Restrictions</label>
+            <input id="restrictions" name="restrictions" value="NONE">
+          </div>
+          <div class="field" data-field="endorsement">
+            <label for="endorsement">Endorsement</label>
+            <input id="endorsement" name="endorsement" value="NONE">
+          </div>
+          <div class="field" data-field="height">
+            <label for="height">Height (in.) <button type="button" class="calc" data-random="height" title="Generate">#</button></label>
+            <input id="height" name="height" placeholder="69">
+          </div>
+          <div class="field" data-field="weight">
+            <label for="weight">Weight (lb.) <button type="button" class="calc" data-random="weight" title="Generate">#</button></label>
+            <input id="weight" name="weight" placeholder="169">
+          </div>
+          <div class="field county-extra" data-field="revision_date" hidden>
+            <label for="revision_date">Revision date</label>
+            <select id="revision_date" name="revision_date">
+              <option value="">== Select ==</option>
+              <option value="03/16/2017">03/16/2017</option>
+              <option value="05/01/2019">05/01/2019</option>
+              <option value="03/01/2020">03/01/2020</option>
+            </select>
+          </div>
+          <div class="field county-extra" data-field="safe_driver" hidden>
+            <label for="safe_driver">Safe Driver <button type="button" class="hint" data-info="Select whether this record is marked as Safe Driver." title="Instruction">i</button></label>
+            <select id="safe_driver" name="safe_driver">
+              <option>Yes</option>
+              <option>No</option>
+            </select>
+          </div>
+          <div class="field" data-field="suffix">
+            <label for="suffix">Name Suffix <button type="button" class="hint" data-info="Name suffix is optional. Use NONE when there is no suffix." title="Instruction">i</button></label>
+            <select id="suffix" name="suffix">
+              <option value="NONE">NONE</option>
+              <option value="JR">JR</option>
+              <option value="SR">SR</option>
+              <option value="III">III</option>
+            </select>
+          </div>
+          <div class="field" data-field="eye_color">
+            <label for="eye_color">Eye (ANSI D-20)</label>
+            <select id="eye_color" name="eye_color">
+              <option value="BRO">BRO (Brown)</option>
+              <option value="BLK">BLK (Black)</option>
+              <option value="BLU">BLU (Blue)</option>
+              <option value="GRN">GRN (Green)</option>
+              <option value="HAZ">HAZ (Hazel)</option>
+              <option value="GRY">GRY (Gray)</option>
+            </select>
+          </div>
+          <div class="field" data-field="hair_color">
+            <label for="hair_color">Hair (ANSI D-20)</label>
+            <select id="hair_color" name="hair_color">
+              <option value="BRO">BRO (Brown)</option>
+              <option value="BLK">BLK (Black)</option>
+              <option value="BLN">BLN (Blond)</option>
+              <option value="GRY">GRY (Gray)</option>
+            </select>
+          </div>
+          <div class="field county-extra" data-field="weight_range" hidden>
+            <label for="weight_range">Weight Range</label>
+            <select id="weight_range" name="weight_range">
+              <option value="">== Select ==</option>
+              <option>up to 31 kg (up to 70 lbs)</option>
+              <option>32 - 45 kg (71 - 100 lbs)</option>
+              <option>46 - 59 kg (101 - 130 lbs)</option>
+              <option>60 - 70 kg (131 - 160 lbs)</option>
+              <option>71 - 86 kg (161 - 190 lbs)</option>
+              <option>87 - 100 kg (191 - 220 lbs)</option>
+              <option>101 - 113 kg (221 - 250 lbs)</option>
+              <option>114 - 127 kg (251 - 280 lbs)</option>
+              <option>128 - 145 kg (281 - 320 lbs)</option>
+              <option>146+ kg (321+ lbs)</option>
+            </select>
+          </div>
+          <div class="field county-extra" data-field="is_real_id" hidden>
+            <label for="is_real_id">Is REAL ID <button type="button" class="hint" data-info="Select whether this record is marked as REAL ID." title="Instruction">i</button></label>
+            <select id="is_real_id" name="is_real_id">
+              <option>Yes</option>
+              <option>No</option>
+            </select>
+          </div>
+          <div class="field county-extra" data-field="address2" hidden>
+            <label for="address2">Address (2nd line)</label>
+            <input id="address2" name="address2">
+          </div>
+          <div class="field county-extra" data-field="race" hidden>
+            <label for="race">Race (ANSI D-20)</label>
+            <select id="race" name="race">
+              <option value="">== Select ==</option>
+              <option>Alaskan or American Indian</option>
+              <option>Asian or Pacific Islander</option>
+              <option>Black</option>
+              <option>Hispanic Origin</option>
+              <option>Non-hispanic</option>
+              <option>Unknown</option>
+              <option>White</option>
+            </select>
+          </div>
+          <input type="hidden" id="country" name="country" value="USA">
+        </form>
+
+        <aside class="settings">
+          <h1>PDF417 Output</h1>
+          <div class="settings-grid">
+            <label>Module size<input name="module_size" value="5.1" form="barcode-form"></label>
+            <label>X<input name="x" value="3130" form="barcode-form"></label>
+            <label>Y<input name="y" value="1176" form="barcode-form"></label>
+            <label>Width<input name="width" value="1736" form="barcode-form"></label>
+            <label>Height<input name="height_px" value="396" form="barcode-form"></label>
+            <label>Canvas W<input name="canvas_width" value="" placeholder="optional" form="barcode-form"></label>
+            <label>Canvas H<input name="canvas_height" value="" placeholder="optional" form="barcode-form"></label>
+            <label>Rotation<input name="rotation" value="none" readonly form="barcode-form"></label>
+          </div>
+          <div class="actions">
+            <button id="fill-random" type="button">Random record</button>
+            <button id="create" type="button">Create</button>
+          </div>
+          <div class="actions secondary-actions">
+            <button id="save-settings" type="button">Save dimensions</button>
+            <button id="load-settings" type="button">Load saved</button>
+          </div>
+          <div id="quality-warning" class="notice" hidden></div>
+          <div id="scan-status" class="scan-status">Scan test waiting</div>
+          <div class="preview">
+            <img id="barcode-preview" alt="">
+          </div>
+          <div class="download-row">
+            <a id="download-png" class="disabled">PNG</a>
+            <a id="download-pdf" class="disabled">PDF</a>
+          </div>
+          <h2 class="output-subtitle">Code 128 from ICN</h2>
+          <div id="code128-status" class="scan-status">Waiting for ICN</div>
+          <div class="preview code128-preview">
+            <img id="code128-preview" alt="">
+          </div>
+          <div class="download-row">
+            <a id="download-code128-png" class="disabled">Code128 PNG</a>
+            <a id="download-code128-pdf" class="disabled">Code128 PDF</a>
+          </div>
+        </aside>
+      </section>
+
+      <section class="results">
+        <div>
+          <h2>Form Data</h2>
+          <pre id="form-data"></pre>
+        </div>
+        <div>
+          <h2>Encoded Text</h2>
+          <pre id="encoded-text"></pre>
+        </div>
+        <div>
+          <h2>Structured Data</h2>
+          <pre id="structured-data"></pre>
+        </div>
+      </section>
+
+      <section class="decoder">
+        <h2>Decode Uploaded PDF417</h2>
+        <input id="decode-upload" type="file" accept="image/*">
+        <pre id="decode-result"></pre>
+      </section>
+    </main>
+    <div id="info-popover" class="info-popover" hidden></div>
+    <script id="instruction-data" type="application/json">{{ instructions | tojson }}</script>
+    <script id="template-data" type="application/json">{{ templates | tojson }}</script>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

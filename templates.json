@@ -1,0 +1,269 @@
+{
+  "mombasa": {
+    "visibleExtras": [
+      "weight_range",
+      "is_real_id"
+    ],
+    "hide": [
+      "state",
+      "suffix",
+      "weight"
+    ],
+    "order": [
+      "license_number",
+      "last_name",
+      "first_name",
+      "middle_name",
+      "address",
+      "city",
+      "zip_code",
+      "license_class",
+      "sex",
+      "donor",
+      "birth_date",
+      "issue_date",
+      "expiry_date",
+      "document_discriminator",
+      "audit_info",
+      "restrictions",
+      "endorsement",
+      "height",
+      "is_real_id",
+      "weight_range",
+      "eye_color",
+      "hair_color"
+    ],
+    "defaults": {
+      "license_number": "50764683",
+      "last_name": "Doe",
+      "first_name": "John",
+      "address": "3704 3RD PL NE",
+      "city": "Center Point",
+      "zip_code": "352151400",
+      "license_class": "D",
+      "birth_date": "01151970",
+      "issue_date": "08262023",
+      "expiry_date": "08262027",
+      "document_discriminator": "NONE",
+      "audit_info": "50764683783372324201",
+      "is_real_id": "Yes"
+    }
+  },
+  "kwale": {
+    "visibleExtras": [
+      "address2"
+    ],
+    "hide": [
+      "state",
+      "suffix",
+      "hair_color"
+    ],
+    "order": [
+      "license_number",
+      "first_name",
+      "last_name",
+      "middle_name",
+      "address",
+      "city",
+      "zip_code",
+      "license_class",
+      "sex",
+      "donor",
+      "birth_date",
+      "issue_date",
+      "expiry_date",
+      "audit_info",
+      "document_discriminator",
+      "restrictions",
+      "endorsement",
+      "height",
+      "weight",
+      "eye_color",
+      "address2"
+    ],
+    "defaults": {
+      "license_number": "T403223261033",
+      "first_name": "John",
+      "last_name": "Doe",
+      "address": "4102 Beaver Dam Rd",
+      "city": "Eagan",
+      "zip_code": "551222123",
+      "license_class": "D",
+      "birth_date": "01151970",
+      "issue_date": "08262020",
+      "expiry_date": "01152024",
+      "audit_info": "T4032232610330124301",
+      "document_discriminator": "00000006518117"
+    }
+  },
+  "kilifi": {
+    "visibleExtras": [
+      "race"
+    ],
+    "hide": [
+      "state",
+      "address2",
+      "weight_range",
+      "is_real_id"
+    ],
+    "showLoginWarning": true,
+    "order": [
+      "license_number",
+      "first_name",
+      "last_name",
+      "middle_name",
+      "address",
+      "city",
+      "zip_code",
+      "license_class",
+      "sex",
+      "donor",
+      "birth_date",
+      "issue_date",
+      "expiry_date",
+      "document_discriminator",
+      "audit_info",
+      "restrictions",
+      "endorsement",
+      "height",
+      "weight",
+      "eye_color",
+      "hair_color",
+      "race",
+      "suffix"
+    ],
+    "defaults": {
+      "license_number": "24253231",
+      "first_name": "John",
+      "last_name": "Doe",
+      "middle_name": "Daniel",
+      "address": "609 E Clare St",
+      "city": "Beeville",
+      "zip_code": "781024321",
+      "license_class": "C",
+      "birth_date": "01151970",
+      "issue_date": "08262021",
+      "expiry_date": "01152028",
+      "document_discriminator": "92334268049701405070",
+      "audit_info": "10001846127"
+    }
+  },
+  "lamu": {
+    "visibleExtras": [
+      "is_real_id"
+    ],
+    "hide": [
+      "state",
+      "suffix",
+      "weight_range",
+      "address2",
+      "race"
+    ],
+    "order": [
+      "license_number",
+      "last_name",
+      "first_name",
+      "middle_name",
+      "address",
+      "city",
+      "zip_code",
+      "license_class",
+      "sex",
+      "donor",
+      "birth_date",
+      "issue_date",
+      "expiry_date",
+      "audit_info",
+      "document_discriminator",
+      "restrictions",
+      "endorsement",
+      "height",
+      "weight",
+      "eye_color",
+      "hair_color",
+      "is_real_id"
+    ],
+    "defaults": {
+      "license_number": "7476172",
+      "last_name": "Doe",
+      "first_name": "John",
+      "address": "3201 Legacy Dr",
+      "city": "Anchorage",
+      "zip_code": "995162765",
+      "license_class": "D",
+      "birth_date": "01151970",
+      "issue_date": "08262020",
+      "expiry_date": "01152028",
+      "audit_info": "1000728920",
+      "document_discriminator": "8475992 460200826PNV-1",
+      "restrictions": "NONE",
+      "endorsement": "NONE",
+      "height": "69",
+      "weight": "169",
+      "is_real_id": "Yes"
+    }
+  },
+  "fl": {
+    "visibleExtras": [
+      "revision_date",
+      "safe_driver"
+    ],
+    "hide": [
+      "state",
+      "suffix",
+      "weight_range",
+      "address2",
+      "race",
+      "is_real_id",
+      "eye_color",
+      "hair_color"
+    ],
+    "showLoginWarning": true,
+    "order": [
+      "license_number",
+      "first_name",
+      "last_name",
+      "middle_name",
+      "address",
+      "city",
+      "zip_code",
+      "license_class",
+      "sex",
+      "donor",
+      "birth_date",
+      "issue_date",
+      "expiry_date",
+      "document_discriminator",
+      "audit_info",
+      "restrictions",
+      "endorsement",
+      "height",
+      "weight",
+      "revision_date",
+      "safe_driver"
+    ],
+    "defaults": {
+      "license_number": "H655435851100",
+      "first_name": "John",
+      "last_name": "Doe",
+      "address": "24944 SW 109THPATH",
+      "city": "Homestead",
+      "state": "FL",
+      "zip_code": "330325131",
+      "license_class": "C",
+      "sex": "M",
+      "donor": "No",
+      "birth_date": "01151970",
+      "issue_date": "08262021",
+      "expiry_date": "01152028",
+      "document_discriminator": "N322108265187",
+      "audit_info": "0100385619573853",
+      "restrictions": "NONE",
+      "endorsement": "NONE",
+      "height": "69",
+      "weight": "169",
+      "revision_date": "",
+      "safe_driver": "Yes"
+    }
+  }
+}
