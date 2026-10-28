@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Edit Instructions</title>
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body>
+    <main class="landing-shell">
+      <header class="landing-header">
+        <div>
+          <p class="eyebrow">County One LNA</p>
+          <h1>Edit Instructions</h1>
+        </div>
+        <div class="landing-actions">
+          <a class="header-action secondary-link" href="/">Landing</a>
+          <button id="add-instruction" class="header-action" type="button">Add instruction</button>
+          <button id="save-instructions" class="header-action" type="button">Save</button>
+        </div>
+      </header>
+
+      <section id="instruction-editor" class="instruction-editor">
+        {% for template, fields in instructions.items() %}
+          {% for field, message in fields.items() %}
+            <div class="instruction-row">
+              <label>Template<input name="template" value="{{ template }}"></label>
+              <label>Field<input name="field" value="{{ field }}"></label>
+              <label>Instruction<textarea name="message">{{ message }}</textarea></label>
+              <button class="remove-instruction" type="button">Remove</button>
+            </div>
+          {% endfor %}
+        {% endfor %}
+      </section>
+      <div id="instruction-save-status" class="scan-status">Ready</div>
+    </main>
+    <script src="/static/instructions.js"></script>
+  </body>
+</html>

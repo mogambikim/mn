@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Edit Counties</title>
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body>
+    <main class="landing-shell">
+      <header class="landing-header">
+        <div>
+          <p class="eyebrow">County One LNA</p>
+          <h1>Edit Counties</h1>
+        </div>
+        <div class="landing-actions">
+          <a class="header-action secondary-link" href="/">Landing</a>
+          <button id="add-county" class="header-action" type="button">Add county</button>
+          <button id="save-counties" class="header-action" type="button">Save</button>
+        </div>
+      </header>
+
+      <section id="county-editor" class="county-editor">
+        {% for county in counties %}
+          <div class="county-edit-row">
+            <label>Name<input name="name" value="{{ county.name }}"></label>
+            <label>Status<input name="status" value="{{ county.status or '' }}" placeholder="ready"></label>
+            <label>Badge<input name="badge" value="{{ county.badge or '' }}" placeholder="NEW"></label>
+            <label>Template
+              <select name="template">
+                <option value="" {% if not county.template %}selected{% endif %}>standard</option>
+                <option value="mombasa" {% if county.template == "mombasa" %}selected{% endif %}>mombasa</option>
+                <option value="kwale" {% if county.template == "kwale" %}selected{% endif %}>kwale</option>
+                <option value="kilifi" {% if county.template == "kilifi" %}selected{% endif %}>kilifi</option>
+                <option value="lamu" {% if county.template == "lamu" %}selected{% endif %}>lamu</option>
+              </select>
+            </label>
+            <button class="duplicate-county" type="button">Copy</button>
+            <button class="remove-county" type="button">Remove</button>
+          </div>
+        {% endfor %}
+      </section>
+      <div id="county-save-status" class="scan-status">Ready</div>
+    </main>
+    <script src="/static/counties.js"></script>
+  </body>
+</html>

@@ -1,0 +1,37 @@
+{
+  "standard": {
+    "license_number": "Random letter + 7 random digits. You can click the calculator icon to calculate the number automatically.",
+    "middle_name": "Middle name is optional. You can leave it blank, or click the calculator to generate a random middle name.",
+    "birth_date": "Enter the date in month, day, year format: MMDDYYYY. Example: 01151970.",
+    "issue_date": "Public issue period is from October 20, 2025 until today. Click the calculator to generate a valid issue date in MMDDYYYY format.",
+    "expiry_date": "Enter expiry date in month, day, year format: MMDDYYYY. The calculator uses the issue date and adds five years.",
+    "document_discriminator": "First 8 digits are the issue date in DD/MM/YYYY format. The last 2 digits are the expiry year. You can click the calculator icon to calculate DD automatically.",
+    "audit_info": "First 2 digits are issue year. Next 3 digits are the day number in that year. Next numbers are document number plus 0401. Click the calculator icon to calculate ICN automatically.",
+    "suffix": "Name suffix is optional. Use NONE when there is no suffix.",
+    "is_real_id": "Select whether this record is marked as REAL ID."
+  },
+  "mombasa": {
+    "license_number": "7 random digits. You can click the calculator icon to calculate number automatically.",
+    "expiry_date": "Same month and day as in birth date. 5 years after the year of issue.",
+    "audit_info": "Document number + 5 random digits + 2 digits of issue year + 3 digits from the beginning of the year to document + 01. You can click the calculator icon to calculate ICN automatically."
+  },
+  "kwale": {
+    "license_number": "One letter and 12 numbers. You can click the calculator icon to calculate number automatically.",
+    "expiry_date": "Same month and day as in birth date. 4 years after the year of issue.",
+    "audit_info": "Document number + '01' + number of days from the beginning of year to issue date + '01'. You can click the calculator icon to calculate ICN automatically.",
+    "document_discriminator": "7 zeros + 7 random digits. You can click the calculator icon to calculate DD automatically."
+  },
+  "kilifi": {
+    "license_number": "8 random digits. You can click the calculator icon to calculate number automatically.",
+    "expiry_date": "Same month and day as in birth date. 6 years after the issue year.",
+    "document_discriminator": "20 digits with custom algorithm. Please click the calculator icon to calculate DD automatically.",
+    "audit_info": "'0000' + 7 random digits. You can click the calculator icon to calculate ICN automatically."
+  },
+  "lamu": {
+    "license_number": "You can click on the calculator icon to calculate number automatically.",
+    "document_discriminator": "7 digits + whitespace + 3 digits + issue date (YYMMDD) + 3 letters + -1 or -0. You can click on the calculator icon to calculate DD automatically.",
+    "audit_info": "10 digits. You can click on the calculator icon to calculate ICN automatically.",
+    "expiry_date": "As of January 2019, 8 years, expires on birthday in 7th or 8th year; previously issued cards, 5 years.",
+    "is_real_id": "Select whether this record is marked as REAL ID."
+  }
+}

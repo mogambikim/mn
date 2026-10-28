@@ -1,0 +1,320 @@
+[
+  {
+    "name": "Mombasa (Alaska)",
+    "status": "ready",
+    "badge": "",
+    "template": "mombasa"
+  },
+  {
+    "name": "Kwale(menissota)",
+    "status": "",
+    "badge": "",
+    "template": "kwale"
+  },
+  {
+    "name": "Kilifi(texas)",
+    "status": "ready",
+    "badge": "",
+    "template": "kilifi"
+  },
+  {
+    "name": "Tana River(ca)",
+    "status": "",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Lamu",
+    "status": "",
+    "badge": "NEW",
+    "template": "lamu"
+  },
+  {
+    "name": "Taita Taveta",
+    "status": "",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Garissa",
+    "status": "ready",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Wajir",
+    "status": "",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Mandera",
+    "status": "",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Marsabit",
+    "status": "ready",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Isiolo",
+    "status": "",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Meru",
+    "status": "",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Tharaka Nithi",
+    "status": "ready",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Embu",
+    "status": "",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Kitui",
+    "status": "",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Machakos",
+    "status": "ready",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Makueni",
+    "status": "",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Nyandarua",
+    "status": "",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Nyeri",
+    "status": "ready",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Kirinyaga",
+    "status": "",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Muranga",
+    "status": "ready",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Kiambu",
+    "status": "",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Turkana",
+    "status": "",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "West Pokot",
+    "status": "",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Samburu",
+    "status": "ready",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Trans Nzoia",
+    "status": "",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Uasin Gishu",
+    "status": "",
+    "badge": "NEW",
+    "template": ""
+  },
+  {
+    "name": "Elgeyo Marakwet",
+    "status": "",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Nandi",
+    "status": "ready",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Baringo",
+    "status": "",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Laikipia",
+    "status": "",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Nakuru",
+    "status": "ready",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Narok",
+    "status": "",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Kajiado",
+    "status": "",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Kericho",
+    "status": "ready",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Bomet",
+    "status": "",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Kakamega",
+    "status": "",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Vihiga",
+    "status": "ready",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Bungoma",
+    "status": "",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Busia",
+    "status": "",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Siaya",
+    "status": "ready",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Kisumu",
+    "status": "",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Homa Bay",
+    "status": "",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Migori",
+    "status": "ready",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Kisii",
+    "status": "",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Nyamira",
+    "status": "",
+    "badge": "",
+    "template": ""
+  },
+  {
+    "name": "Nairobi",
+    "status": "ready",
+    "badge": "NEW",
+    "template": ""
+  },
+  {
+    "name": "Florida (FL)",
+    "status": "ready",
+    "badge": "",
+    "template": "florida"
+  },
+  {
+    "name": "Illinois (IL)",
+    "status": "ready",
+    "badge": "",
+    "template": "illinois"
+  },
+  {
+    "name": "Mississippi (MS)",
+    "status": "ready",
+    "badge": "",
+    "template": "mississippi"
+  },
+  {
+    "name": "New York (NY)",
+    "status": "ready",
+    "badge": "",
+    "template": "new_york"
+  },
+  {
+    "name": "Washington (WA)",
+    "status": "ready",
+    "badge": "",
+    "template": "washington"
+  },
+  {
+    "name": "District of Columbia (DC)",
+    "status": "ready",
+    "badge": "",
+    "template": "district_of_columbia"
+  }
+]
