@@ -138,11 +138,15 @@ def decode_pdf417(source: str | Path | bytes | BinaryIO) -> str:
         return _decode_with_pyzbar(image)
     except Exception as pyzbar_error:
         try:
-            return _decode_with_zxing(image)
-        except Exception as zxing_error:
-            raise RuntimeError(
-                f"Unable to decode PDF417. pyzbar: {pyzbar_error}; zxing: {zxing_error}"
-            ) from zxing_error
+            return _decode_with_zxing_cpp(image)
+        except Exception as cpp_error:
+            try:
+                return _decode_with_zxing(image)
+            except Exception as zxing_error:
+                raise RuntimeError(
+                    "Unable to decode PDF417. "
+                    f"pyzbar: {pyzbar_error}; zxing-cpp: {cpp_error}; zxing: {zxing_error}"
+                ) from zxing_error
 
 
 def _open_image(source: str | Path | bytes | BinaryIO) -> Image.Image:
@@ -179,3 +183,12 @@ def _decode_with_zxing(image: Image.Image) -> str:
         return result.parsed
     finally:
         temp_path.unlink(missing_ok=True)
+
+
+def _decode_with_zxing_cpp(image: Image.Image) -> str:
+    import zxingcpp
+
+    results = zxingcpp.read_barcodes(image, formats=zxingcpp.BarcodeFormat.PDF417)
+    if not results:
+        raise RuntimeError("No PDF417 barcode found.")
+    return results[0].bytes.decode("utf-8", errors="replace")

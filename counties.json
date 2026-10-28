@@ -1,6 +1,6 @@
 [
   {
-    "name": "Mombasa (Alabama)",
+    "name": "Mombasa (Alaska)",
     "status": "ready",
     "badge": "",
     "template": "mombasa"
@@ -18,19 +18,13 @@
     "template": "kilifi"
   },
   {
-    "name": "Florida",
-    "status": "ready",
-    "badge": "NEW",
-    "template": "fl"
-  },
-  {
     "name": "Tana River(ca)",
     "status": "",
     "badge": "",
     "template": ""
   },
   {
-    "name": "Lamu  (Alaska)",
+    "name": "Lamu",
     "status": "",
     "badge": "NEW",
     "template": "lamu"
@@ -286,5 +280,41 @@
     "status": "ready",
     "badge": "NEW",
     "template": ""
+  },
+  {
+    "name": "Florida (FL)",
+    "status": "ready",
+    "badge": "",
+    "template": "florida"
+  },
+  {
+    "name": "Illinois (IL)",
+    "status": "ready",
+    "badge": "",
+    "template": "illinois"
+  },
+  {
+    "name": "Mississippi (MS)",
+    "status": "ready",
+    "badge": "",
+    "template": "mississippi"
+  },
+  {
+    "name": "New York (NY)",
+    "status": "ready",
+    "badge": "",
+    "template": "new_york"
+  },
+  {
+    "name": "Washington (WA)",
+    "status": "ready",
+    "badge": "",
+    "template": "washington"
+  },
+  {
+    "name": "District of Columbia (DC)",
+    "status": "ready",
+    "badge": "",
+    "template": "district_of_columbia"
   }
 ]

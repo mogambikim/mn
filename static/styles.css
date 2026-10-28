@@ -96,6 +96,34 @@ button.header-action {
   font-size: 13px;
 }
 
+.synthetic-warning {
+  margin-bottom: 12px;
+  border: 1px solid #f59e0b;
+  border-radius: 4px;
+  background: #fffbeb;
+  color: #92400e;
+  padding: 12px 14px;
+  text-align: center;
+  font: 700 13px/1.5 Arial, sans-serif;
+}
+
+.profile-picker {
+  display: grid;
+  gap: 5px;
+  min-width: 190px;
+  font: 12px/1.3 Arial, sans-serif;
+  font-weight: 700;
+}
+
+.profile-picker select {
+  min-height: 36px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  background: #fff;
+  padding: 6px 8px;
+  font: inherit;
+}
+
 .login-warning a {
   color: #0057ff;
   font-weight: 700;
@@ -466,7 +494,7 @@ h2 {
 
 .results {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   margin-top: 16px;
 }
@@ -490,6 +518,119 @@ pre {
 
 .decoder {
   margin-top: 16px;
+}
+
+.mode-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.mode-switch button,
+#scan-barcode,
+#load-decoded-record,
+#clear-fields {
+  min-height: 36px;
+  border: 1px solid #2563eb;
+  border-radius: 4px;
+  background: #2563eb;
+  color: #fff;
+  cursor: pointer;
+  padding: 7px 12px;
+}
+
+.mode-switch button.selected {
+  border-color: #0f766e;
+  background: #0f766e;
+}
+
+.mode-switch .secondary-button {
+  border-color: #64748b;
+  background: #64748b;
+}
+
+#scan-barcode:disabled,
+#load-decoded-record:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.scan-preview {
+  display: grid;
+  min-height: 130px;
+  margin: 10px 0;
+  place-items: center;
+  border: 1px dashed #94a3b8;
+  background: #fff;
+  color: #64748b;
+}
+
+.scan-preview img {
+  max-width: 100%;
+  max-height: 360px;
+  object-fit: contain;
+}
+
+.decoder p {
+  font: 13px/1.5 Arial, sans-serif;
+}
+
+.decoder textarea {
+  display: block;
+  margin: 8px 0 12px;
+}
+
+.decoder label {
+  display: block;
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+#xml-schema {
+  font: 12px/1.4 Consolas, "Courier New", monospace;
+}
+
+#parse-payload,
+#copy-xml {
+  min-height: 34px;
+  border: 1px solid #2563eb;
+  border-radius: 4px;
+  background: #2563eb;
+  color: #fff;
+  cursor: pointer;
+  padding: 6px 10px;
+}
+
+#copy-xml {
+  min-height: 28px;
+  font-size: 12px;
+}
+
+#parsed-fields-table table,
+#decoded-fields-table table {
+  width: 100%;
+  margin-top: 10px;
+  border-collapse: collapse;
+  background: #fff;
+  font-size: 12px;
+}
+
+#parsed-fields-table th,
+#parsed-fields-table td,
+#decoded-fields-table th,
+#decoded-fields-table td {
+  border: 1px solid #cbd5e1;
+  padding: 6px 8px;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+#parsed-fields-table th,
+#decoded-fields-table th {
+  width: 35%;
+  background: #f1f5f9;
 }
 
 @media (max-width: 980px) {

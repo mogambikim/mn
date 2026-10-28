@@ -1,6 +1,9 @@
 const form = document.querySelector("#barcode-form");
 const encodedText = document.querySelector("#encoded-text");
 const structuredData = document.querySelector("#structured-data");
+const xmlOutput = document.querySelector("#xml-output");
+const parsedFieldsTable = document.querySelector("#parsed-fields-table");
+const decodeFieldsTable = document.querySelector("#decoded-fields-table");
 const preview = document.querySelector("#barcode-preview");
 const pngLink = document.querySelector("#download-png");
 const pdfLink = document.querySelector("#download-pdf");
@@ -18,6 +21,8 @@ const countyTemplate = shell?.dataset.template || "";
 const savedInstructions = JSON.parse(document.querySelector("#instruction-data")?.textContent || "{}");
 const savedTemplates = JSON.parse(document.querySelector("#template-data")?.textContent || "{}");
 let calculationTimer;
+let lastDecodedFields = null;
+let scanPreviewUrl = null;
 
 const countyConfigs = {
   mombasa: {
@@ -162,15 +167,28 @@ for (const [templateName, config] of Object.entries(savedTemplates)) {
 function collectPayload() {
   const data = new FormData(form);
   const fields = {};
+  const profileConfig = countyConfigs[countyTemplate];
+  const activeFields = profileConfig?.activeFields
+    ? new Set(profileConfig.activeFields)
+    : null;
   for (const [key, value] of data.entries()) {
     if (["module_size", "x", "y", "width", "height_px", "canvas_width", "canvas_height", "rotation"].includes(key)) {
       continue;
     }
+    if (activeFields && !activeFields.has(key)) continue;
     fields[key] = value;
   }
   return {
-    template: countyTemplate || "standard",
     fields,
+    profile: profileConfig?.jurisdictionProfile ? countyTemplate : "",
+    xml_schema: (() => {
+      try {
+        return JSON.parse(document.querySelector("#xml-schema").value);
+      } catch {
+        throw new Error("XML schema must be valid JSON.");
+      }
+    })(),
+    record_source: document.querySelector("#record-source").value,
     settings: {
       module_size: data.get("module_size"),
       x: data.get("x"),
@@ -219,13 +237,23 @@ async function createBarcode() {
   updateQualityWarning();
   encodedText.textContent = "Generating...";
   structuredData.textContent = "";
+  xmlOutput.textContent = "";
+  parsedFieldsTable.replaceChildren();
   scanStatus.textContent = "Scan test running...";
   scanStatus.className = "scan-status pending";
-  const response = await fetch("/api/generate", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(collectPayload()),
-  });
+  let response;
+  try {
+    response = await fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(collectPayload()),
+    });
+  } catch (error) {
+    encodedText.textContent = `Generation failed: ${error.message}`;
+    scanStatus.textContent = "Generation failed";
+    scanStatus.className = "scan-status failed";
+    return;
+  }
   const body = await response.json();
   if (!response.ok) {
     encodedText.textContent = (body.errors || ["Generation failed."]).join("\n");
@@ -235,6 +263,8 @@ async function createBarcode() {
   }
   encodedText.textContent = body.encoded_text;
   structuredData.textContent = JSON.stringify(body.structured, null, 2);
+  renderFieldsTable(parsedFieldsTable, body.structured);
+  xmlOutput.textContent = body.xml;
   preview.src = `${body.png_url}?t=${Date.now()}`;
   setDownloads(body.png_url, body.pdf_url);
   setCode128Downloads(body);
@@ -253,8 +283,7 @@ async function randomField(fieldName) {
 
   if (fieldName === "expiry_date") {
     const issueDate = form.elements.issue_date.value.trim();
-    const birthDate = form.elements.birth_date.value.trim();
-    const expiry = expiryFromInstruction(birthDate, issueDate) || expiryFromIssue(issueDate);
+    const expiry = expiryFromIssue(issueDate);
     if (expiry) {
       form.elements.expiry_date.value = expiry;
       syncDatePickers();
@@ -268,7 +297,10 @@ async function randomField(fieldName) {
     return;
   }
 
-  const response = await fetch(`/api/random-field/${fieldName}`);
+  const profileQuery = countyConfigs[countyTemplate]?.jurisdictionProfile
+    ? `?profile=${encodeURIComponent(countyTemplate)}`
+    : "";
+  const response = await fetch(`/api/random-field/${fieldName}${profileQuery}`);
   const body = await response.json();
   if (body.ok) {
     const input = form.elements[fieldName];
@@ -305,37 +337,30 @@ function randomCountyField(fieldName) {
   const expiry = form.elements.expiry_date.value || "";
   const birth = form.elements.birth_date.value || "";
   const license = form.elements.license_number.value || "";
-  const instructedExpiry = fieldName === "expiry_date" ? expiryFromInstruction(birth, issue) : "";
 
   if (countyTemplate === "mombasa") {
     if (fieldName === "license_number") return randomDigits(7);
-    if (fieldName === "expiry_date") return instructedExpiry || expiryFromBirthAndIssue(birth, issue, 5);
+    if (fieldName === "expiry_date") return expiryFromBirthAndIssue(birth, issue, 5);
     if (fieldName === "document_discriminator") return "NONE";
     if (fieldName === "audit_info") return `${license || randomDigits(7)}${randomDigits(5)}${issue.slice(6, 8)}${dayOfYear(issue)}01`;
   }
   if (countyTemplate === "kwale") {
     if (fieldName === "license_number") return `T${randomDigits(12)}`;
-    if (fieldName === "expiry_date") return instructedExpiry || expiryFromBirthAndIssue(birth, issue, 4);
+    if (fieldName === "expiry_date") return expiryFromBirthAndIssue(birth, issue, 4);
     if (fieldName === "audit_info") return `${license || `T${randomDigits(12)}`}01${dayOfYear(issue)}01`;
     if (fieldName === "document_discriminator") return `0000000${randomDigits(7)}`;
   }
   if (countyTemplate === "kilifi") {
     if (fieldName === "license_number") return randomDigits(8);
-    if (fieldName === "expiry_date") return instructedExpiry || expiryFromBirthAndIssue(birth, issue, 6);
+    if (fieldName === "expiry_date") return expiryFromBirthAndIssue(birth, issue, 6);
     if (fieldName === "document_discriminator") return randomDigits(20);
     if (fieldName === "audit_info") return `0000${randomDigits(7)}`;
   }
   if (countyTemplate === "lamu") {
     if (fieldName === "license_number") return randomDigits(7);
-    if (fieldName === "expiry_date") return instructedExpiry || expiryFromBirthAndIssue(birth, issue, 8);
+    if (fieldName === "expiry_date") return expiryFromBirthAndIssue(birth, issue, 8);
     if (fieldName === "document_discriminator") return `${randomDigits(7)} ${randomDigits(3)}${issue.slice(6, 8)}${issue.slice(0, 4)}${randomLetters(3)}-${Math.floor(Math.random() * 2)}`;
     if (fieldName === "audit_info") return randomDigits(10);
-  }
-  if (countyTemplate === "fl") {
-    if (fieldName === "license_number") return `${randomLetters(1)}${randomDigits(12)}`;
-    if (fieldName === "expiry_date") return instructedExpiry || expiryFromBirthAndIssue(birth, issue, 5);
-    if (fieldName === "document_discriminator") return `N${randomDigits(12)}`;
-    if (fieldName === "audit_info") return `0100${randomDigits(12)}`;
   }
   return null;
 }
@@ -353,48 +378,6 @@ function expiryFromBirthAndIssue(birthDate, issueDate, yearsAfterIssue) {
   if (birthDigits.length !== 8 || issueDigits.length !== 8) return "";
   const year = Number(issueDigits.slice(4, 8)) + yearsAfterIssue;
   return `${birthDigits.slice(0, 4)}${year}`;
-}
-
-function expiryInstruction() {
-  const template = countyTemplate || "standard";
-  return savedInstructions[template]?.expiry_date || savedInstructions.standard?.expiry_date || "";
-}
-
-function instructionYears(message) {
-  const numberWords = {
-    one: 1,
-    two: 2,
-    three: 3,
-    four: 4,
-    five: 5,
-    six: 6,
-    seven: 7,
-    eight: 8,
-    nine: 9,
-    ten: 10,
-  };
-  const lower = message.toLowerCase();
-  const numericMatch = lower.match(/(\d+)\s+years?/);
-  if (numericMatch) return Number(numericMatch[1]);
-  const wordMatch = lower.match(/\b(one|two|three|four|five|six|seven|eight|nine|ten)\s+years?\b/);
-  return wordMatch ? numberWords[wordMatch[1]] : null;
-}
-
-function expiryFromInstruction(birthDate, issueDate) {
-  const instruction = expiryInstruction().toLowerCase();
-  const years = instructionYears(instruction);
-  if (!instruction || years === null) return "";
-
-  const birthDigits = birthDate.replace(/\D/g, "");
-  const issueDigits = issueDate.replace(/\D/g, "");
-  const mentionsBirth = /\bbirth\s*date\b|\bbirthdate\b|\bbirthday\b/.test(instruction);
-  const mentionsIssue = /\bissue(d)?\b/.test(instruction);
-  const monthDaySource = mentionsBirth && birthDigits.length === 8 ? birthDigits : issueDigits;
-  const yearSource = mentionsIssue && issueDigits.length === 8 ? issueDigits : monthDaySource;
-
-  if (monthDaySource.length !== 8 || yearSource.length !== 8) return "";
-  const year = Number(yearSource.slice(4, 8)) + years;
-  return `${monthDaySource.slice(0, 4)}${year}`;
 }
 
 function expiryFromIssue(issueDate) {
@@ -430,7 +413,7 @@ async function calculateDerivedFields(overwriteExpiry = true) {
   const fields = collectFields();
   if (!fields.issue_date) return;
   if (overwriteExpiry || !fields.expiry_date) {
-    const expiry = countyConfigs[countyTemplate] ? randomCountyField("expiry_date") : expiryFromInstruction(fields.birth_date, fields.issue_date) || expiryFromIssue(fields.issue_date);
+    const expiry = countyConfigs[countyTemplate] ? randomCountyField("expiry_date") : expiryFromIssue(fields.issue_date);
     if (expiry) {
       form.elements.expiry_date.value = expiry;
       fields.expiry_date = expiry;
@@ -445,7 +428,7 @@ async function calculateDerivedFields(overwriteExpiry = true) {
   const response = await fetch("/api/calculate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ fields, template: countyTemplate || "standard" }),
+    body: JSON.stringify({ fields }),
   });
   const body = await response.json();
   if (!body.ok) return;
@@ -469,6 +452,7 @@ function applyCountyTemplate() {
   const config = countyConfigs[countyTemplate];
   if (!config) return;
   document.querySelector("#login-warning").hidden = !config.showLoginWarning;
+  document.querySelector("#synthetic-profile-warning").hidden = !config.jurisdictionProfile;
 
   document.querySelectorAll("[data-field]").forEach((field) => {
     const name = field.dataset.field;
@@ -491,8 +475,13 @@ function applyCountyTemplate() {
     const hint = wrapper?.querySelector(".hint");
     if (hint) hint.dataset.info = message;
   }
+  for (const [fieldName, labelText] of Object.entries(config.labels || {})) {
+    const label = document.querySelector(`label[for="${fieldName}"]`);
+    if (label?.firstChild) label.firstChild.textContent = `${labelText} `;
+  }
   syncDatePickers();
   updateFormPreview();
+  if (config.jurisdictionProfile) randomRecord();
 }
 
 function updateScanStatus(body) {
@@ -502,7 +491,7 @@ function updateScanStatus(body) {
     scanStatus.className = "scan-status pending";
     return;
   }
-  if (decoded === body.encoded_text) {
+  if (body.round_trip?.payload_preserved) {
     scanStatus.textContent = "Scan test passed";
     scanStatus.className = "scan-status passed";
     return;
@@ -569,12 +558,20 @@ function hideInfo(event) {
 }
 
 async function randomRecord() {
-  const response = await fetch("/api/random-record");
+  const profileQuery = countyConfigs[countyTemplate]?.jurisdictionProfile
+    ? `?profile=${encodeURIComponent(countyTemplate)}`
+    : "";
+  const response = await fetch(`/api/random-record${profileQuery}`);
   const body = await response.json();
   if (!body.ok) return;
+  document.querySelector("#record-source").value = "test";
   for (const [key, value] of Object.entries(body.fields)) {
     const input = form.elements[key];
     if (input) input.value = value;
+  }
+  const profileConfig = countyConfigs[countyTemplate];
+  for (const [key, value] of Object.entries(profileConfig?.defaults || {})) {
+    if (form.elements[key]) form.elements[key].value = value;
   }
   syncDatePickers();
   updateFormPreview();
@@ -583,6 +580,19 @@ async function randomRecord() {
 
 document.querySelector("#create").addEventListener("click", createBarcode);
 document.querySelector("#fill-random").addEventListener("click", randomRecord);
+document.querySelector("#profile-picker").addEventListener("change", (event) => {
+  const selected = event.target.value;
+  if (selected === "/studio") {
+    window.location.href = selected;
+    return;
+  }
+  window.location.href = `/studio?county=${selected}`;
+});
+document.querySelector("#copy-xml").addEventListener("click", async () => {
+  const value = xmlOutput.textContent;
+  if (!value) return;
+  await navigator.clipboard.writeText(value);
+});
 document.querySelector("#save-settings").addEventListener("click", saveSettings);
 document.querySelector("#load-settings").addEventListener("click", loadSettings);
 document.querySelectorAll("[data-random]").forEach((button) => {
@@ -623,20 +633,212 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") infoPopover.hidden = true;
 });
 
-document.querySelector("#decode-upload").addEventListener("change", async (event) => {
+function renderFieldsTable(container, fields) {
+  container.replaceChildren();
+  if (!fields || typeof fields !== "object") return;
+  const table = document.createElement("table");
+  const body = document.createElement("tbody");
+  for (const [field, value] of Object.entries(fields)) {
+    const row = document.createElement("tr");
+    const name = document.createElement("th");
+    const content = document.createElement("td");
+    name.textContent = field;
+    content.textContent = value;
+    row.append(name, content);
+    body.append(row);
+  }
+  table.append(body);
+  container.append(table);
+}
+
+function loadDecodedRecord() {
+  if (!lastDecodedFields) return;
+  document.querySelectorAll("#barcode-form option[data-scanned-value='true']").forEach((option) => option.remove());
+  const fieldNames = [
+    "license_number", "first_name", "middle_name", "last_name", "address", "city",
+    "state", "zip_code", "license_class", "sex", "donor", "birth_date", "issue_date",
+    "expiry_date", "document_discriminator", "inventory_control_number", "compliance_type",
+    "card_revision_date", "audit_info", "restrictions", "endorsement", "height", "weight",
+    "suffix", "eye_color", "hair_color", "country",
+  ];
+  const unavailableFields = [];
+  const preservedSelectValues = [];
+  const activeFields = countyConfigs[countyTemplate]?.activeFields;
+  for (const key of fieldNames) {
+    if (form.elements[key]) form.elements[key].value = "";
+  }
+  for (const [key, value] of Object.entries(lastDecodedFields)) {
+    const formKey = key === "organ_donor" ? "donor" : key;
+    const input = form.elements[formKey];
+    if (!input || value === "") continue;
+    if (activeFields && !activeFields.includes(formKey)) {
+      unavailableFields.push(formKey);
+      continue;
+    }
+    if (input instanceof HTMLSelectElement && !Array.from(input.options).some((option) => option.value === value)) {
+      const option = new Option(`${value} (from scan)`, value);
+      option.dataset.scannedValue = "true";
+      input.add(option);
+      preservedSelectValues.push(formKey);
+    }
+    input.value = ["birth_date", "issue_date", "expiry_date", "card_revision_date"].includes(formKey)
+      ? value.replace(/^(\d{4})-(\d{2})-(\d{2})$/, "$2$3$1")
+      : value;
+  }
+  document.querySelector("#record-source").value = "external";
+  const status = document.querySelector("#decode-status");
+  const notes = [];
+  if (preservedSelectValues.length) {
+    notes.push(`Non-standard scanned values were preserved in their fields: ${preservedSelectValues.join(", ")}.`);
+  }
+  if (unavailableFields.length) {
+    notes.push(`Not shown by the selected profile: ${unavailableFields.join(", ")}. Original values remain in the decoded field table.`);
+  }
+  if (notes.length) status.textContent += ` ${notes.join(" ")}`;
+  syncDatePickers();
+  updateFormPreview();
+}
+
+function clearRecordFields() {
+  document.querySelectorAll("#barcode-form option[data-scanned-value='true']").forEach((option) => option.remove());
+  document.querySelectorAll("#barcode-form .field input, #barcode-form .field select").forEach((input) => {
+    input.value = "";
+  });
+  document.querySelector("#record-source").value = "external";
+  lastDecodedFields = null;
+  document.querySelector("#load-decoded-record").disabled = true;
+  syncDatePickers();
+  updateFormPreview();
+}
+
+function setInputMode(mode) {
+  const scanning = mode === "scan";
+  document.querySelector("#scan-panel").hidden = !scanning;
+  document.querySelector("#manual-entry-mode").classList.toggle("selected", !scanning);
+  document.querySelector("#scan-existing-mode").classList.toggle("selected", scanning);
+  if (scanning) document.querySelector("#decode-upload").focus();
+}
+
+function xmlSchema() {
+  try {
+    return JSON.parse(document.querySelector("#xml-schema").value);
+  } catch {
+    throw new Error("XML schema must be valid JSON.");
+  }
+}
+
+async function showDecodedPayload(text, label) {
+  const status = document.querySelector("#decode-status");
+  const output = document.querySelector("#decode-result");
+  lastDecodedFields = null;
+  document.querySelector("#load-decoded-record").disabled = true;
+  output.textContent = `${label}\n${text}`;
+  document.querySelector("#scanner-input").value = text;
+  document.querySelector("#record-source").value = "external";
+  status.textContent = "Barcode/payload decoded; validating AAMVA format...";
+  status.className = "scan-status pending";
+  try {
+    const response = await fetch("/api/parse", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ payload: text, xml_schema: xmlSchema() }),
+    });
+    const body = await response.json();
+    if (!response.ok) {
+      status.textContent = `Generic payload only: ${(body.errors || ["AAMVA validation failed."]).join(" ")}`;
+      status.className = "scan-status failed";
+      decodeFieldsTable.replaceChildren();
+      xmlOutput.textContent = "";
+      return;
+    }
+    const report = body.aamva_record;
+    lastDecodedFields = report.fields;
+    document.querySelector("#load-decoded-record").disabled = false;
+    const selectedProfile = countyConfigs[countyTemplate]?.profileName;
+    status.textContent = report.aamva_valid
+      ? `AAMVA v${report.version} structure and required fields validated. Issuer is not verified.`
+      : `AAMVA v${report.version} structure decoded; ${report.validation_errors.join(" ")}`;
+    status.textContent += selectedProfile
+      ? ` Selected UI profile: ${selectedProfile}; this does not verify the issuer.`
+      : " No jurisdiction profile was inferred; select one above if needed.";
+    if (Object.keys(report.unsupported_fields || {}).length) {
+      status.textContent += ` Unmapped field IDs preserved: ${Object.keys(report.unsupported_fields).join(", ")}.`;
+    }
+    status.className = report.aamva_valid ? "scan-status passed" : "scan-status failed";
+    renderFieldsTable(decodeFieldsTable, report.raw_fields);
+    xmlOutput.textContent = body.xml;
+  } catch (error) {
+    status.textContent = error.message;
+    status.className = "scan-status failed";
+  }
+}
+
+document.querySelector("#load-decoded-record").addEventListener("click", loadDecodedRecord);
+document.querySelector("#clear-fields").addEventListener("click", clearRecordFields);
+document.querySelector("#manual-entry-mode").addEventListener("click", () => setInputMode("manual"));
+document.querySelector("#scan-existing-mode").addEventListener("click", () => setInputMode("scan"));
+document.querySelector("#scanner-input").addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+    event.preventDefault();
+    document.querySelector("#parse-payload").click();
+  }
+});
+
+document.querySelector("#decode-upload").addEventListener("change", (event) => {
   const file = event.target.files[0];
+  const image = document.querySelector("#scan-image-preview");
+  const empty = document.querySelector("#scan-preview-empty");
+  const status = document.querySelector("#decode-status");
+  const scanButton = document.querySelector("#scan-barcode");
+  scanButton.disabled = !file;
+  if (!file) return;
+  if (scanPreviewUrl) URL.revokeObjectURL(scanPreviewUrl);
+  scanPreviewUrl = URL.createObjectURL(file);
+  image.src = scanPreviewUrl;
+  image.hidden = false;
+  empty.hidden = true;
+  status.textContent = `${file.name} ready to scan. Check the preview, then select Scan Barcode.`;
+  status.className = "scan-status pending";
+});
+
+document.querySelector("#scan-barcode").addEventListener("click", async () => {
+  const file = document.querySelector("#decode-upload").files[0];
   if (!file) return;
   const output = document.querySelector("#decode-result");
-  output.textContent = "Decoding...";
+  const status = document.querySelector("#decode-status");
+  output.textContent = "Scanning image...";
+  status.textContent = `Decoding PDF417 from ${file.name}...`;
+  status.className = "scan-status pending";
   const data = new FormData();
   data.append("image", file);
-  const response = await fetch("/api/decode", { method: "POST", body: data });
-  const body = await response.json();
-  if (!response.ok) {
-    output.textContent = (body.errors || ["Decode failed."]).join("\n");
-    return;
+  try {
+    const response = await fetch("/api/decode", { method: "POST", body: data });
+    const body = await response.json();
+    if (!response.ok) {
+      status.textContent = (body.errors || ["Decode failed."]).join("\n");
+      status.className = "scan-status failed";
+      output.textContent = "";
+      decodeFieldsTable.replaceChildren();
+      xmlOutput.textContent = "";
+      lastDecodedFields = null;
+      document.querySelector("#load-decoded-record").disabled = true;
+      return;
+    }
+    await showDecodedPayload(body.decoded_text, "Decoded image payload");
+  } catch (error) {
+    status.textContent = `Decode failed: ${error.message}`;
+    status.className = "scan-status failed";
   }
-  output.textContent = `${body.decoded_text}\n\n${JSON.stringify(body.structured, null, 2)}`;
+});
+
+document.querySelector("#parse-payload").addEventListener("click", () => {
+  const text = document.querySelector("#scanner-input").value;
+  if (text) showDecodedPayload(text, "Scanner / pasted input");
+  else {
+    const status = document.querySelector("#decode-status");
+    status.textContent = "Enter or scan a raw payload first.";
+    status.className = "scan-status failed";
+  }
 });
 
 loadSettings();

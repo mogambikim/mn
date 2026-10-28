@@ -3,4 +3,5 @@ Pillow>=12,<13
 pdf417gen==0.8.1
 pyzbar==0.1.9
 zxing==1.0.3
+zxing-cpp>=2.2,<3
 reportlab>=4.4,<5

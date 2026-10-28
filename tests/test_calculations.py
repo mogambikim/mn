@@ -1,10 +1,4 @@
-from barcode_studio.calculations import (
-    calculate_dd,
-    calculate_icn,
-    document_number_from_license,
-    expiry_from_instruction,
-    expiry_from_issue,
-)
+from barcode_studio.calculations import calculate_dd, calculate_icn, document_number_from_license, expiry_from_issue
 
 
 def test_expiry_uses_same_month_day_plus_five_years():
@@ -21,22 +15,3 @@ def test_icn_uses_issue_year_day_of_year_document_and_suffix():
 
 def test_document_number_can_be_derived_from_license():
     assert document_number_from_license("D1234567") == "34567"
-
-
-def test_expiry_can_follow_instruction_text():
-    assert (
-        expiry_from_instruction(
-            "01151970",
-            "10202025",
-            "The calculator uses the birth date and adds five years.",
-        )
-        == "01151975"
-    )
-    assert (
-        expiry_from_instruction(
-            "01151970",
-            "10202025",
-            "Same month and day as in birth date. 5 years after the year of issue.",
-        )
-        == "01152030"
-    )

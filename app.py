@@ -7,13 +7,18 @@ from pathlib import Path
 
 from flask import Flask, jsonify, render_template, request, send_file
 
-from barcode_studio.aamva import fill_template, parse_aamva, validate_fields
+from barcode_studio.aamva import (
+    fill_template,
+    generate_xml,
+    parse_aamva,
+    parse_aamva_record,
+    validate_fields,
+)
 from barcode_studio.barcode import BarcodeSettings, decode_pdf417, render_code128, render_pdf417
 from barcode_studio.calculations import (
     calculate_dd,
     calculate_icn,
     document_number_from_license,
-    expiry_from_instruction,
     expiry_from_issue,
 )
 from barcode_studio.random_data import random_field, random_record
@@ -32,7 +37,6 @@ DEFAULT_COUNTIES = [
     {"name": "Mombasa", "status": "ready", "template": "mombasa"},
     {"name": "Kwale", "template": "kwale"},
     {"name": "Kilifi", "status": "ready", "template": "kilifi"},
-    {"name": "Florida", "status": "ready", "badge": "NEW", "template": "fl"},
     {"name": "Tana River"},
     {"name": "Lamu", "badge": "NEW", "template": "lamu"},
     {"name": "Taita Taveta"},
@@ -79,13 +83,188 @@ DEFAULT_COUNTIES = [
     {"name": "Nairobi", "status": "ready", "badge": "NEW"},
 ]
 
+PROFILE_FIELDS = {
+    "license_number",
+    "first_name",
+    "last_name",
+    "middle_name",
+    "address",
+    "city",
+    "zip_code",
+    "state",
+    "country",
+    "license_class",
+    "sex",
+    "donor",
+    "birth_date",
+    "issue_date",
+    "expiry_date",
+    "document_discriminator",
+    "audit_info",
+    "restrictions",
+    "endorsement",
+    "height",
+    "weight",
+    "card_revision_date",
+    "safe_driver",
+    "eye_color",
+    "hair_color",
+    "suffix",
+    "is_real_id",
+    "veteran",
+    "inventory_control_number",
+    "compliance_type",
+    "weight_range",
+    "address2",
+    "race",
+}
+
+OPTIONAL_PROFILE_FIELDS = {
+    "middle_name",
+    "suffix",
+    "card_revision_date",
+    "safe_driver",
+    "is_real_id",
+    "veteran",
+}
+
+JURISDICTION_PROFILES = {
+    "florida": {
+        "name": "Florida",
+        "abbreviation": "FL",
+        "order": [
+            "license_number", "first_name", "last_name", "middle_name", "address",
+            "city", "zip_code", "license_class", "sex", "donor", "birth_date",
+            "issue_date", "expiry_date", "document_discriminator", "audit_info",
+            "restrictions", "endorsement", "height", "weight", "card_revision_date",
+            "safe_driver",
+        ],
+        "hints": {
+            "license_number": "PDF template note: random letter + 12 random digits. This sample rule is unverified. Test IDs use a TEST-FL- prefix and are not official license numbers.",
+            "card_revision_date": "The PDF shows a revision-date selector but does not show its options. The available DDB value is optional; no jurisdiction-specific choices are assumed.",
+            "safe_driver": "Template UI selection only; no verified AAMVA field mapping is available, so this value is not encoded.",
+        },
+        "labels": {"document_discriminator": "DD", "card_revision_date": "Revision date"},
+    },
+    "illinois": {
+        "name": "Illinois",
+        "abbreviation": "IL",
+        "order": [
+            "first_name", "last_name", "middle_name", "license_number", "address",
+            "city", "zip_code", "license_class", "sex", "donor", "birth_date",
+            "issue_date", "expiry_date", "document_discriminator", "audit_info",
+            "restrictions", "endorsement", "height", "weight", "eye_color",
+            "hair_color", "suffix", "is_real_id",
+        ],
+        "hints": {
+            "license_number": "PDF template note: first character of last name + 11 random digits. This sample rule is unverified. Test IDs use a TEST-IL- prefix and are not official license numbers.",
+            "audit_info": "PDF template note: a document number followed by random characters and 01. The algorithm is unverified; generated audit values are synthetic.",
+            "is_real_id": "Template UI selection only; no verified AAMVA field mapping is available, so this value is not encoded.",
+        },
+        "labels": {"document_discriminator": "DD", "is_real_id": "Is REAL ID"},
+    },
+    "mississippi": {
+        "name": "Mississippi",
+        "abbreviation": "MS",
+        "order": [
+            "license_number", "first_name", "last_name", "middle_name", "address",
+            "city", "zip_code", "license_class", "sex", "donor", "birth_date",
+            "issue_date", "expiry_date", "audit_info", "document_discriminator",
+            "restrictions", "endorsement", "height", "eye_color",
+        ],
+        "hints": {
+            "license_number": "PDF template note: 80 + 7 random digits. This sample rule is unverified. Test IDs use a TEST-MS- prefix and are not official license numbers.",
+        },
+        "labels": {"document_discriminator": "DD", "audit_info": "ICN"},
+    },
+    "new_york": {
+        "name": "New York",
+        "abbreviation": "NY",
+        "order": [
+            "license_number", "first_name", "last_name", "middle_name", "address",
+            "city", "zip_code", "license_class", "sex", "donor", "birth_date",
+            "issue_date", "expiry_date", "document_discriminator", "endorsement",
+            "restrictions", "height", "eye_color",
+        ],
+        "hints": {},
+        "labels": {"document_discriminator": "DD"},
+    },
+    "washington": {
+        "name": "Washington",
+        "abbreviation": "WA",
+        "order": [
+            "license_number", "first_name", "last_name", "middle_name", "address",
+            "city", "zip_code", "license_class", "sex", "donor", "birth_date",
+            "issue_date", "expiry_date", "audit_info", "document_discriminator",
+            "restrictions", "endorsement", "height", "weight", "eye_color", "suffix",
+            "veteran",
+        ],
+        "hints": {
+            "license_number": "PDF template note: WDL + 8 random digits/letters + B. This sample rule is unverified. Test IDs use a TEST-WA- prefix and are not official license numbers.",
+            "veteran": "Template UI selection only; no verified AAMVA field mapping is available, so this value is not encoded.",
+        },
+        "labels": {"document_discriminator": "DD", "audit_info": "Audit info"},
+    },
+    "district_of_columbia": {
+        "name": "District of Columbia",
+        "abbreviation": "DC",
+        "order": [
+            "license_number", "last_name", "first_name", "middle_name", "address",
+            "city", "zip_code", "license_class", "sex", "donor", "birth_date",
+            "issue_date", "expiry_date", "audit_info", "document_discriminator",
+            "restrictions", "endorsement", "height", "eye_color", "suffix",
+        ],
+        "hints": {
+            "license_number": "PDF template note: 7 digits. This sample rule is unverified. Test IDs use a TEST-DC- prefix and are not official license numbers.",
+        },
+        "labels": {"document_discriminator": "DD", "audit_info": "Audit info"},
+    },
+}
+
+
+def build_jurisdiction_template(profile: dict) -> dict:
+    visible = profile["order"]
+    abbreviation = profile["abbreviation"]
+    required = [
+        field for field in visible
+        if field not in OPTIONAL_PROFILE_FIELDS
+    ]
+    return {
+        "jurisdictionProfile": True,
+        "profileName": profile["name"],
+        "abbreviation": abbreviation,
+        "syntheticIdPrefix": f"TEST-{abbreviation}-",
+        "activeFields": sorted(set(visible) | {"state", "country"}),
+        "requiredFields": required + ["state", "country"],
+        "visibleExtras": [field for field in ("safe_driver", "is_real_id", "veteran") if field in visible],
+        "hide": sorted(PROFILE_FIELDS - set(visible)),
+        "order": visible,
+        "defaults": {"state": abbreviation, "country": "USA"},
+        "hints": profile["hints"],
+        "labels": profile["labels"],
+        "specificationNotes": [
+            "Profile field layout is transcribed from the supplied template screenshot.",
+            "Jurisdiction-specific ID generation and issuer metadata are unverified and are not reproduced.",
+        ],
+    }
+
+
+DEFAULT_COUNTIES.extend(
+    {
+        "name": f"{profile['name']} ({profile['abbreviation']})",
+        "status": "ready",
+        "template": profile_id,
+    }
+    for profile_id, profile in JURISDICTION_PROFILES.items()
+)
+
 DEFAULT_INSTRUCTIONS = {
     "standard": {
         "license_number": "Random letter + 7 random digits. You can click the calculator icon to calculate the number automatically.",
         "middle_name": "Middle name is optional. You can leave it blank, or click the calculator to generate a random middle name.",
         "birth_date": "Enter the date in month, day, year format: MMDDYYYY. Example: 01151970.",
         "issue_date": "Public issue period is from October 20, 2025 until today. Click the calculator to generate a valid issue date in MMDDYYYY format.",
-        "expiry_date": "Enter expiry date in month, day, year format: MMDDYYYY. The calculator uses the birth date and adds five years.",
+        "expiry_date": "Enter expiry date in month, day, year format: MMDDYYYY. The calculator uses the issue date and adds five years.",
         "document_discriminator": "First 8 digits are the issue date in DD/MM/YYYY format. The last 2 digits are the expiry year. You can click the calculator icon to calculate DD automatically.",
         "audit_info": "First 2 digits are issue year. Next 3 digits are the day number in that year. Next numbers are document number plus 0401. Click the calculator icon to calculate ICN automatically.",
         "suffix": "Name suffix is optional. Use NONE when there is no suffix.",
@@ -114,13 +293,6 @@ DEFAULT_INSTRUCTIONS = {
         "audit_info": "10 digits. You can click on the calculator icon to calculate ICN automatically.",
         "expiry_date": "As of January 2019, 8 years, expires on birthday in 7th or 8th year; previously issued cards, 5 years.",
         "is_real_id": "Select whether this record is marked as REAL ID.",
-    },
-    "fl": {
-        "license_number": "Random letter + 12 random digits. You can click on the calculator icon to calculate number automatically.",
-        "expiry_date": "Same month and day as in birth date. 5 years after the year of issue.",
-        "document_discriminator": "You can click on the calculator icon to calculate DD automatically.",
-        "audit_info": "0100 + 12 random digits. You can click on the calculator icon to calculate ICN automatically.",
-        "safe_driver": "Select whether this record is marked as Safe Driver.",
     },
 }
 
@@ -233,41 +405,14 @@ DEFAULT_TEMPLATES = {
             "is_real_id": "Yes",
         },
     },
-    "fl": {
-        "visibleExtras": ["revision_date", "safe_driver"],
-        "hide": ["state", "suffix", "weight_range", "address2", "race", "is_real_id", "eye_color", "hair_color"],
-        "showLoginWarning": True,
-        "order": [
-            "license_number", "first_name", "last_name", "middle_name",
-            "address", "city", "zip_code", "license_class", "sex", "donor",
-            "birth_date", "issue_date", "expiry_date", "document_discriminator", "audit_info",
-            "restrictions", "endorsement", "height", "weight", "revision_date", "safe_driver",
-        ],
-        "defaults": {
-            "license_number": "H655435851100",
-            "first_name": "John",
-            "last_name": "Doe",
-            "address": "24944 SW 109THPATH",
-            "city": "Homestead",
-            "state": "FL",
-            "zip_code": "330325131",
-            "license_class": "C",
-            "sex": "M",
-            "donor": "No",
-            "birth_date": "01151970",
-            "issue_date": "08262021",
-            "expiry_date": "01152028",
-            "document_discriminator": "N322108265187",
-            "audit_info": "0100385619573853",
-            "restrictions": "NONE",
-            "endorsement": "NONE",
-            "height": "69",
-            "weight": "169",
-            "revision_date": "",
-            "safe_driver": "Yes",
-        },
-    },
 }
+
+DEFAULT_TEMPLATES.update(
+    {
+        profile_id: build_jurisdiction_template(profile)
+        for profile_id, profile in JURISDICTION_PROFILES.items()
+    }
+)
 
 
 def load_counties() -> list[dict]:
@@ -281,6 +426,11 @@ def load_counties() -> list[dict]:
         default = defaults_by_name.get(county.get("name"))
         if default and default.get("template") and not county.get("template"):
             county["template"] = default["template"]
+            changed = True
+    existing_names = {item.get("name") for item in counties}
+    for default in DEFAULT_COUNTIES:
+        if default["name"] not in existing_names and default.get("template") in JURISDICTION_PROFILES:
+            counties.append(default)
             changed = True
     if changed:
         save_counties(counties)
@@ -340,12 +490,26 @@ def index():
 def studio():
     county_name = request.args.get("county", "")
     county = next((item for item in load_counties() if item["name"] == county_name), {})
+    templates = load_templates()
+    profile_options = [
+        {
+            "name": config["profileName"],
+            "abbreviation": config["abbreviation"],
+            "template": template_id,
+            "county_name": next(
+                item["name"] for item in load_counties() if item.get("template") == template_id
+            ),
+        }
+        for template_id, config in templates.items()
+        if config.get("jurisdictionProfile")
+    ]
     return render_template(
         "index.html",
         county=county,
         county_name=county_name,
         instructions=load_instructions(),
-        templates=load_templates(),
+        templates=templates,
+        profile_options=profile_options,
     )
 
 
@@ -421,16 +585,34 @@ def generate():
     payload = request.get_json(silent=True) or {}
     fields = payload.get("fields", {})
     settings_payload = payload.get("settings", {})
-    template = payload.get("template") or "standard"
+    record_source = payload.get("record_source", "test")
+    profile_id = payload.get("profile", "")
+    profile = load_templates().get(profile_id, {}) if profile_id else {}
+    if profile_id and not profile.get("jurisdictionProfile"):
+        return jsonify({"ok": False, "errors": ["The selected jurisdiction profile is not registered."]}), 400
 
-    errors = validate_fields(fields, enforce_public_issue_window=(template == "standard"))
+    if not isinstance(fields, dict):
+        return jsonify({"ok": False, "errors": ["Fields must be provided as an object."]}), 400
+    if profile:
+        active_fields = set(profile["activeFields"])
+        fields = {name: value for name, value in fields.items() if name in active_fields}
+    if record_source not in {"test", "external"}:
+        return jsonify({"ok": False, "errors": ["Record source must be 'test' or 'external'."]}), 400
+    errors = validate_fields(
+        fields,
+        record_source=record_source,
+        required_fields=profile.get("requiredFields"),
+        synthetic_id_prefix=profile.get("syntheticIdPrefix"),
+    )
     if errors:
         return jsonify({"ok": False, "errors": errors}), 400
 
-    encoded_text = fill_template(fields)
     try:
+        encoded_text = fill_template(fields)
+        record = parse_aamva_record(encoded_text)
+        xml_output = generate_xml(record, payload.get("xml_schema"))
         settings = BarcodeSettings.from_payload(settings_payload)
-    except ValueError as exc:
+    except (TypeError, ValueError) as exc:
         return jsonify({"ok": False, "errors": [str(exc)]}), 400
     image = render_pdf417(encoded_text, settings)
 
@@ -461,7 +643,15 @@ def generate():
         {
             "ok": True,
             "encoded_text": encoded_text,
-            "structured": parse_aamva(encoded_text),
+            "structured": record["fields"],
+            "aamva_record": record,
+            "xml": xml_output,
+            "record_source": record_source,
+            "profile": profile_id or None,
+            "round_trip": {
+                "payload_preserved": decoded_preview == encoded_text,
+                "aamva_valid": True,
+            },
             "decoded_preview": decoded_preview,
             "decoded_structured": structured_preview,
             "png_url": f"/download/png/{output_path.name}",
@@ -481,32 +671,85 @@ def decode():
 
     uploaded = request.files["image"]
     data = uploaded.read()
-    decoded_text = decode_pdf417(io.BytesIO(data))
-    return jsonify({"ok": True, "decoded_text": decoded_text, "structured": parse_aamva(decoded_text)})
+    if not data:
+        return jsonify({"ok": False, "errors": ["The uploaded image is empty."]}), 400
+    try:
+        decoded_text = decode_pdf417(io.BytesIO(data))
+    except (RuntimeError, OSError, ValueError) as exc:
+        return jsonify({"ok": False, "errors": [str(exc)]}), 422
+    try:
+        record = parse_aamva_record(decoded_text)
+    except ValueError as exc:
+        return jsonify(
+            {
+                "ok": True,
+                "decoded_text": decoded_text,
+                "is_aamva": False,
+                "aamva_error": str(exc),
+                "structured": parse_aamva(decoded_text),
+                "xml": None,
+            }
+        )
+    return jsonify(
+        {
+            "ok": True,
+            "decoded_text": decoded_text,
+            "is_aamva": True,
+            "aamva_error": None,
+            "structured": record["fields"],
+            "aamva_record": record,
+            "xml": generate_xml(record),
+        }
+    )
+
+
+@app.post("/api/parse")
+def parse_payload():
+    payload = request.get_json(silent=True) or {}
+    text = payload.get("payload", "")
+    if not isinstance(text, str) or not text:
+        return jsonify({"ok": False, "errors": ["Enter a non-empty decoded payload."]}), 400
+    try:
+        record = parse_aamva_record(text)
+    except ValueError as exc:
+        return jsonify({"ok": False, "is_aamva": False, "errors": [str(exc)]}), 422
+    try:
+        xml_output = generate_xml(record, payload.get("xml_schema"))
+    except ValueError as exc:
+        return jsonify({"ok": False, "errors": [str(exc)]}), 400
+    return jsonify({"ok": True, "is_aamva": True, "aamva_record": record, "xml": xml_output})
 
 
 @app.get("/api/random-record")
 def api_random_record():
-    return jsonify({"ok": True, "fields": random_record()})
+    profile_id = request.args.get("profile", "")
+    profile = load_templates().get(profile_id, {}) if profile_id else {}
+    if profile_id and not profile.get("jurisdictionProfile"):
+        return jsonify({"ok": False, "errors": ["The selected jurisdiction profile is not registered."]}), 400
+    fields = random_record()
+    if profile:
+        fields["license_number"] = f"{profile['syntheticIdPrefix']}{os.urandom(4).hex().upper()}"
+        fields.update(profile["defaults"])
+    return jsonify({"ok": True, "fields": fields, "profile": profile_id or None})
 
 
 @app.get("/api/random-field/<field_name>")
 def api_random_field(field_name: str):
+    profile_id = request.args.get("profile", "")
+    profile = load_templates().get(profile_id, {}) if profile_id else {}
+    if profile_id and not profile.get("jurisdictionProfile"):
+        return jsonify({"ok": False, "errors": ["The selected jurisdiction profile is not registered."]}), 400
+    if profile and field_name == "license_number":
+        value = f"{profile['syntheticIdPrefix']}{os.urandom(4).hex().upper()}"
+        return jsonify({"ok": True, "field": field_name, "value": value})
     return jsonify({"ok": True, "field": field_name, "value": random_field(field_name)})
 
 
 @app.post("/api/calculate")
 def api_calculate():
-    payload = request.get_json(silent=True) or {}
-    fields = payload.get("fields", {})
-    template = payload.get("template") or "standard"
+    fields = (request.get_json(silent=True) or {}).get("fields", {})
     issue = fields.get("issue_date", "")
-    expiry_instruction = load_instructions().get(template, {}).get("expiry_date", "")
-    expiry = fields.get("expiry_date", "") or expiry_from_instruction(
-        fields.get("birth_date", ""),
-        issue,
-        expiry_instruction,
-    ) or expiry_from_issue(issue)
+    expiry = fields.get("expiry_date", "") or expiry_from_issue(issue)
     license_number = fields.get("license_number", "")
     document_number = document_number_from_license(license_number)
     return jsonify(
